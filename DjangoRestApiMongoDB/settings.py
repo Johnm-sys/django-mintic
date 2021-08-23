@@ -12,10 +12,18 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 
+from dotenv import load_dotenv
+## using existing module to specify location of the .env file
+from pathlib import Path
+ 
+load_dotenv()
+URL_DB = os.getenv("URL-MONGODB")
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
+print(" url de la base de datos")
+print(URL_DB)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
@@ -87,22 +95,14 @@ WSGI_APPLICATION = 'DjangoRestApiMongoDB.wsgi.application'
 DATABASES = {
     'default': {
             'ENGINE': 'djongo',
-            'NAME': 'MinTic2021-2',
+            'NAME': 'exampleWithThreeCourt',
             'ENFORCE_SCHEMA': False,
             'CLIENT': {
-                'host': 'mongodb+srv://MisionTic:GsmTqOiyKuUoFn8W@cluster0mintic.z1swe.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+                'host': URL_DB
             }  
         }
     
 }
-    # {
-    #     'ENGINE': 'djongo',
-    #     'NAME': 'bezkoder_db',
-    #     'HOST': 'mongodb+srv',
-    #     'PORT': 27017,
-    #     'CLIENT': 'mongodb+srv://MisionTic:GsmTqOiyKuUoFn8W@cluster0mintic.z1swe.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
-    # }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators

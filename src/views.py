@@ -1,133 +1,119 @@
+from DjangoRestApiMongoDB.settings import DATABASES
 from typing import cast
-from django.shortcuts import render
+from django.shortcuts import render 
+import json
 
 from django.http.response import JsonResponse
 from rest_framework.parsers import JSONParser 
 from rest_framework import status
+from src import serializers
  
-from src.models import Reservation, Tutorial, Tennis_court
-from src.serializers import ReservationSerializer, TutorialSerializer, CourtSerializer
+from src.models import Tennis_court_1, Tennis_court_2, Tennis_court_3 #, Tutorial, Tennis_court
+from src.serializers import CourtSerializer1, CourtSerializer2, CourtSerializer3 #, TutorialSerializer, CourtSerializer
 from rest_framework.decorators import api_view
 from datetime import datetime, date
 import time
+import re 
 
-
-@api_view(['GET', 'POST', 'DELETE'])
-def tutorial_list(request):    
-    if request.method == 'GET':
-        tutorials = Tutorial.objects.all()
-        
-        title = request.GET.get('title', None)
-        if title is not None:
-            tutorials = tutorials.filter(title__icontains=title)
-        
-        tutorials_serializer = TutorialSerializer(tutorials, many=True)
-        return JsonResponse(tutorials_serializer.data, safe=False)
-        # 'safe=False' for objects serialization
-
-    elif request.method == 'POST':
-            tutorial_data = JSONParser().parse(request)
-            print(tutorial_data)
-            tutorial_serializer = TutorialSerializer(data=tutorial_data)
-            print(tutorial_serializer)
-            if tutorial_serializer.is_valid():
-                tutorial_serializer.save()
-                return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED) 
-            return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-   
-    elif request.method == 'DELETE':
-        count = Tutorial.objects.all().delete()
-        return JsonResponse({'message': '{} Tutorials were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
-    
-
-
-@api_view(['GET', 'POST', 'DELETE'])
-def reservation_list(request):
-    if request.method == 'GET':
-        tutorials = Reservation.objects.all()
-        
-        title = request.GET.get('title', None)
-        if title is not None:
-            tutorials = tutorials.filter(title__icontains=title)
-        
-        tutorials_serializer = ReservationSerializer(tutorials, many=True)
-        return JsonResponse(tutorials_serializer.data, safe=False)
-        # 'safe=False' for objects serialization
-
-    elif request.method == 'POST':
-            tutorial_data = JSONParser().parse(request)
-            print(tutorial_data)
-            tutorial_serializer = ReservationSerializer(data=tutorial_data)
-            print(tutorial_serializer)
-            if tutorial_serializer.is_valid():
-                tutorial_serializer.save()
-                return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED) 
-            return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-   
-    elif request.method == 'DELETE':
-        count = Reservation.objects.all().delete()
-        return JsonResponse({'message': '{} Tutorials were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
-    
-
+# Check the tennis court(day, date);
 @api_view(['POST'])
-def tennis_courts(request):    
+def view_reserve_list(request, tennis_court):
+    # recognize by tennis court
+    if tennis_court == "1":
+        model = Tennis_court_1
+        serializer = CourtSerializer1
+    elif tennis_court == "2":    
+        model = Tennis_court_2
+        serializer = CourtSerializer2
+    elif tennis_court == "3":    
+        model = Tennis_court_3
+        serializer = CourtSerializer3
+    else:
+        return JsonResponse({"Error":"Not found tennis_court query"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check the tennis court by day or date(2020-08-22)
+    if request.method == 'POST':
+        tennis_court = list(model.objects.all().values())
+        data = JSONParser().parse(request)
+        if data.get("day"):
+            tennis_court = list(filter(lambda reservation: reservation["date_init"][0:10] == data["day"], tennis_court))
+            return JsonResponse(tennis_court, safe=False) 
+        elif data.get("client"):
+            tennis_court = list(filter(lambda reservation: reservation["client"] == data["client"], tennis_court))
+            return JsonResponse(tennis_court, safe=False) 
+        else:
+            return JsonResponse({"data":"no filter"}, safe=False)  
+
+# data by tennis court all; Delete all data;
+@api_view(['GET', 'DELETE'])
+def tennis_reserve_all_list(request, tennis_court):
+    # recognize by tennis court
+    if tennis_court == "1":
+        model = Tennis_court_1
+        serializer = CourtSerializer1
+    elif tennis_court == "2":    
+        model = Tennis_court_2
+        serializer = CourtSerializer2
+    elif tennis_court == "3":    
+        model = Tennis_court_3
+        serializer = CourtSerializer3
+    else:
+        return JsonResponse({"Error":"Not found tennis_court query"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # return data by tennis court
     if request.method == 'GET':
-        tutorials = Tennis_court.objects.all()
-        
+        tennis_court = list(model.objects.all().values())
         title = request.GET.get('title', None)
         if title is not None:
-            tutorials = tutorials.filter(title__icontains=title)
+            tennis_court = tennis_court.filter(title__icontains=title)
         
-        tutorials_serializer = CourtSerializer(tutorials, many=True)
-        return JsonResponse(tutorials_serializer.data, safe=False)
+        tennis_court_serializer = serializer(tennis_court, many=True)
+        return JsonResponse(tennis_court_serializer.data, safe=False)
         # 'safe=False' for objects serialization
 
+    # Warning: Delete all data
+    elif request.method == 'DELETE':
+        count = model.objects.all().delete()
+        return JsonResponse({'message': '{} Tutorials were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
+
+# Update by client id; Create a reservation new;
+@api_view(['PUT', 'POST'])
+def client_data(request, tennis_court):
+    # recognize by tennis court
+    if tennis_court == "1":
+        model = Tennis_court_1
+        serializer = CourtSerializer1
+    elif tennis_court == "2":    
+        model = Tennis_court_2
+        serializer = CourtSerializer2
+    elif tennis_court == "3":    
+        model = Tennis_court_3
+        serializer = CourtSerializer3
+    else:
+        return JsonResponse({"Error":"Not found tennis_court query"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Update by client id
+    if request.method == 'PUT':
+        Data = JSONParser().parse(request) 
+        try: 
+            reservation = model.objects.get(id=Data["id"]) 
+            print(type(reservation))
+        except model.DoesNotExist: 
+            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND) 
+ 
+        change_reservation = serializer(reservation, data=Data) 
+        if change_reservation.is_valid(): 
+            change_reservation.save()
+            print("guardado")
+            return JsonResponse(change_reservation.data) 
+        return JsonResponse(change_reservation.errors, status=status.HTTP_400_BAD_REQUEST) 
+
+    # Create a reservation new
     elif request.method == 'POST':
-            tutorial_data = JSONParser().parse(request)
-            print(tutorial_data)
-            tutorial_serializer = CourtSerializer(data=tutorial_data)
-            print(tutorial_serializer)
+            Data = JSONParser().parse(request)
+            tutorial_serializer = serializer(data=Data)
             if tutorial_serializer.is_valid():
                 tutorial_serializer.save()
                 return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED) 
             return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-   
-    elif request.method == 'DELETE':
-        count = Tennis_court.objects.all().delete()
-        return JsonResponse({'message': '{} Tutorials were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
-    
-
- 
- 
-# @api_view(['GET', 'PUT', 'DELETE'])
-# def tutorial_detail(request, pk):
-#     try: 
-#         tutorial = Tutorial.objects.get(pk=pk) 
-#     except Tutorial.DoesNotExist: 
-#         return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND) 
- 
-#     if request.method == 'GET': 
-#         tutorial_serializer = TutorialSerializer(tutorial) 
-#         return JsonResponse(tutorial_serializer.data) 
- 
-#     elif request.method == 'PUT': 
-#         tutorial_data = JSONParser().parse(request) 
-#         tutorial_serializer = TutorialSerializer(tutorial, data=tutorial_data) 
-#         if tutorial_serializer.is_valid(): 
-#             tutorial_serializer.save() 
-#             return JsonResponse(tutorial_serializer.data) 
-#         return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
- 
-#     elif request.method == 'DELETE': 
-#         tutorial.delete() 
-#         return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
-    
-        
-# @api_view(['GET'])
-# def tutorial_list_published(request):
-#     tutorials = Tutorial.objects.filter(published=True)
-        
-#     if request.method == 'GET': 
-#         tutorials_serializer = TutorialSerializer(tutorials, many=True)
-#         return JsonResponse(tutorials_serializer.data, safe=False)
     

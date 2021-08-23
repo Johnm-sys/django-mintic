@@ -2,9 +2,7 @@ from django.conf.urls import url
 from src import views 
  
 urlpatterns = [ 
-    url(r'^api/reservation$', views.reservation_list),
-    url(r'^api/tennis-court$', views.tennis_courts),
-    url(r'^api/tutorial$', views.tutorial_list),
-    # url(r'^api/tutorials/(?P<pk>[0-9]+)$', views.tutorial_detail),
-    # url(r'^api/tutorials/published$', views.tutorial_list_published)
+    url(r'^all/tennis-court/(?P<tennis_court>[0-9]+)$', views.tennis_reserve_all_list),
+    url(r'^consult/tennis-court/(?P<tennis_court>[0-9]+)$', views.view_reserve_list),
+    url(r'^client/tennis-court/(?P<tennis_court>[0-9]+)$', views.client_data)
 ]

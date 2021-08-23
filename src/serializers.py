@@ -1,37 +1,46 @@
 from rest_framework import serializers 
-from src.models import Reservation,  Tutorial, Tennis_court
+from src.models import Tennis_court_1, Tennis_court_2, Tennis_court_3 #,  Tutorial, Tennis_court
  
- 
-class TutorialSerializer(serializers.ModelSerializer):
- 
-    class Meta:
-        model = Tutorial
-        fields = ('id',
-                  'title',
-                  'description',
-                  'published'
-                  )
 
-class ReservationSerializer(serializers.ModelSerializer):
+class CourtSerializer1(serializers.ModelSerializer):
  
     class Meta:
-        model = Reservation
+        model = Tennis_court_1
         fields = ('id',
                   'title',
                   'client',
                   'description',
-                  'data_init',
-                  'data_end',
-                  'published'
+                  'date_init',
+                  'date_end',
+                  'referee',
+                  'instructor'
                     )
-                  
-class CourtSerializer(serializers.ModelSerializer):
+
+class CourtSerializer2(serializers.ModelSerializer):
  
     class Meta:
-        model = Tennis_court
+        model = Tennis_court_2
         fields = ('id',
+                  'title',
                   'client',
-                  'type',
-                  'umpire',
-                  'teacher'
-                  )
+                  'description',
+                  'date_init',
+                  'date_end',
+                  'referee',
+                  'instructor'
+                    )
+
+class CourtSerializer3(serializers.ModelSerializer):
+ 
+    class Meta:
+        model = Tennis_court_3
+        fields = ('id',
+                  'title',
+                  'client',
+                  'description',
+                  'date_init',
+                  'date_end',
+                  'referee',
+                  'instructor'
+                    )
+
