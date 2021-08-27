@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import django_heroku
 
 from dotenv import load_dotenv
 ## using existing module to specify location of the .env file
