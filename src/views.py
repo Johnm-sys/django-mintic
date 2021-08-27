@@ -71,10 +71,18 @@ def tennis_reserve_all_list(request, tennis_court):
         return JsonResponse(tennis_court_serializer.data, safe=False)
         # 'safe=False' for objects serialization
 
-    # Warning: Delete all data
+    # Delete one reservation, by reservation ID and client ID data
     elif request.method == 'DELETE':
-        count = model.objects.all().delete()
-        return JsonResponse({'message': '{} Tutorials were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
+        Data = JSONParser().parse(request)
+        try: 
+            reservation = model.objects.get(id=Data["id"]) 
+            if Data["client"] == reservation.client:
+                res = reservation.delete()
+                return JsonResponse({'message': '{} Reservation of tennis court were deleted successfully!'.format(res[0])}, status=status.HTTP_202_ACCEPTED)
+        except model.DoesNotExist: 
+            print("Record doesn't exists")
+            return JsonResponse({'message': 'the reservation doesn´t exist'}, status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse({'message': 'The cliente Id is diffrent to reservation Id'}, status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
 
 # Update by client id; Create a reservation new;
 @api_view(['PUT', 'POST'])
@@ -117,3 +125,7 @@ def client_data(request, tennis_court):
                 return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED) 
             return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+@api_view(['GET'])
+def verify_serve(request):
+    if request.method == 'GET':
+        return JsonResponse({'Serve': 'Running'}, safe=False)

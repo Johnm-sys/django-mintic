@@ -18,12 +18,11 @@ from pathlib import Path
  
 load_dotenv()
 URL_DB = os.getenv("URL-MONGODB")
+NAME_DB = os.getenv("NAME-DATABASES")
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-print(" url de la base de datos")
-print(URL_DB)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
@@ -95,7 +94,7 @@ WSGI_APPLICATION = 'DjangoRestApiMongoDB.wsgi.application'
 DATABASES = {
     'default': {
             'ENGINE': 'djongo',
-            'NAME': 'exampleWithThreeCourt',
+            'NAME': NAME_DB,
             'ENFORCE_SCHEMA': False,
             'CLIENT': {
                 'host': URL_DB
